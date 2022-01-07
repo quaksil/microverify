@@ -1,2 +1,2 @@
 # microverify
-com.soacc.microverify
+My SOACC Web Service
