@@ -12,9 +12,9 @@
 </div>
 <p></p>
 
-<a href="read">View all Students</a>
+<a href="read" class="text-decoration-none">View all Students</a>
 <br/>
-<a href="searchRead.jsp">Search Students</a>
+<a href="searchRead.jsp" class="text-decoration-none">Search Students</a>
 
 <jsp:include page="footer.jsp" />
 </html>

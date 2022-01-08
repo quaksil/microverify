@@ -30,15 +30,6 @@ public class SearchQuery {
 	private ResultSet results;
 	ArrayList<Students> students = new ArrayList<Students>();
 
-	public static boolean isNumeric(String str) {
-		try {
-			Integer.parseInt(str);
-			return true;
-		} catch (NumberFormatException e) {
-			return false;
-		}
-	}
-
 	public Photo getPhoto(int studentid) throws SQLException, IOException {
 
 		Photo photo = null;
@@ -79,7 +70,7 @@ public class SearchQuery {
 
 		PreparedStatement ps = null;
 
-		if (isNumeric(queryS)) {
+		if (NumericHelper.isNumeric(queryS)) {
 
 			int id = Integer.parseInt(queryS);
 			query = "SELECT * FROM student WHERE id=" + id;
@@ -104,7 +95,11 @@ public class SearchQuery {
 				firstname = fullname[0];
 				lastname = fullname[1];
 
-				query = "SELECT * FROM student WHERE UPPER (firstname) LIKE ? AND UPPER (lastname) LIKE ? OR (UPPER (firstname) LIKE ? AND UPPER (lastname) LIKE ?) ORDER BY id ASC";
+				query = "SELECT * FROM student WHERE UPPER (firstname) LIKE ? AND UPPER (lastname) LIKE ?"
+						+ " OR (UPPER (firstname) LIKE ? AND UPPER (lastname) LIKE ?)"
+						+ " OR (UPPER (firstname) LIKE ? OR UPPER (lastname) LIKE ?)"
+						+ " OR (UPPER (firstname) LIKE ? OR UPPER (lastname) LIKE ?)"
+						+ " ORDER BY id ASC";
 
 				try {
 
@@ -113,6 +108,10 @@ public class SearchQuery {
 					ps.setString(2, "%" + lastname.toUpperCase() + "%");
 					ps.setString(3, "%" + lastname.toUpperCase() + "%");
 					ps.setString(4, "%" + firstname.toUpperCase() + "%");
+					ps.setString(5, "%" + firstname.toUpperCase() + "%");
+					ps.setString(6, "%" + lastname.toUpperCase() + "%");
+					ps.setString(7, "%" + lastname.toUpperCase() + "%");
+					ps.setString(8, "%" + firstname.toUpperCase() + "%");
 
 					this.results = ps.executeQuery();
 
