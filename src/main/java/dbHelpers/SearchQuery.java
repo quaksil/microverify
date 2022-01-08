@@ -6,29 +6,25 @@ import model.Faculty;
 import model.Photo;
 import model.Major;
 import model.Students;
-
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.sql.Blob;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.Base64;
 
-import static connection.SingleConnection.getConnection;
+import connection.SingleConnection;
+
+import java.util.Base64;
 
 public class SearchQuery {
 
 	private ResultSet results;
 	ArrayList<Students> students = new ArrayList<Students>();
+	
+	Connection connect = SingleConnection.getConnection();
 
 	public Photo getPhoto(int studentid) throws SQLException, IOException {
 
@@ -36,7 +32,7 @@ public class SearchQuery {
 
 		String queryImage = "SELECT * FROM photos WHERE studentid = ?";
 
-		PreparedStatement ps = getConnection().prepareStatement(queryImage);
+		PreparedStatement ps = connect.prepareStatement(queryImage);
 
 		ps.setInt(1, studentid);
 		this.results = ps.executeQuery();
@@ -65,8 +61,6 @@ public class SearchQuery {
 		String lastname = "";
 
 		String query = null;
-		String queryCurrentYear = null;
-		boolean isAuthorized = false;
 
 		PreparedStatement ps = null;
 
@@ -77,7 +71,7 @@ public class SearchQuery {
 
 			try {
 
-				ps = getConnection().prepareStatement(query);
+				ps = connect.prepareStatement(query);
 				this.results = ps.executeQuery();
 
 			} catch (SQLException e) {
@@ -103,7 +97,7 @@ public class SearchQuery {
 
 				try {
 
-					ps = getConnection().prepareStatement(query);
+					ps = connect.prepareStatement(query);
 					ps.setString(1, "%" + firstname.toUpperCase() + "%");
 					ps.setString(2, "%" + lastname.toUpperCase() + "%");
 					ps.setString(3, "%" + lastname.toUpperCase() + "%");
@@ -126,7 +120,7 @@ public class SearchQuery {
 
 				try {
 
-					ps = getConnection().prepareStatement(query);
+					ps = connect.prepareStatement(query);
 					ps.setString(1, "%" + queryS.toUpperCase() + "%");
 					ps.setString(2, "%" + queryS.toUpperCase() + "%");
 

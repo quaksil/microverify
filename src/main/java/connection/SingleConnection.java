@@ -1,71 +1,48 @@
 package connection;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.Objects;
-import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class SingleConnection {
 
-    static {
-        connect();
-    }
+	static {
+		connect();
+	}
 
-    private static Connection conn;
+	private static Connection conn;
 
-    public SingleConnection() {
-        connect();
-    }
+	public SingleConnection() {
+		connect();
+	}
 
-    private static void connect() {
+	public static void connect() {
 
-        String rootPath = Objects.requireNonNull(Thread.currentThread().getContextClassLoader().getResource("dbConn.properties")).getPath();
-        InputStream input = null;
+		URI dbUri = null;
+		try {
+			dbUri = new URI(System.getenv("DATABASE_URL"));
+		} catch (URISyntaxException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
-        try {
-            input = new FileInputStream(rootPath);
-        } catch (FileNotFoundException e) {
-            Logger.getLogger(SingleConnection.class.getName()).log(Level.SEVERE, null, e);
-        }
-        Properties props = new Properties();
+		String username = dbUri.getUserInfo().split(":")[0];
+		String password = dbUri.getUserInfo().split(":")[1];
+		String dbUrl = "jdbc:postgresql://" + dbUri.getHost() + ':' + dbUri.getPort() + dbUri.getPath();
 
-        try {
-            props.load(input);
-        } catch (IOException e) {
-            Logger.getLogger(SingleConnection.class.getName()).log(Level.SEVERE, null, e);
-        }
-        try {
-            input.close();
-        } catch (IOException e) {
-            Logger.getLogger(SingleConnection.class.getName()).log(Level.SEVERE, null, e);
-        }
+		try {
+			conn = DriverManager.getConnection(dbUrl, username, password);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
-        String driver = props.getProperty("driver.name");
-        String url = props.getProperty("server.name");
-        String username = props.getProperty("user.name");
-        String passwd = props.getProperty("user.password");
-        
-        try {
-            Class.forName(driver);
-        } catch (ClassNotFoundException e) {
-            Logger.getLogger(SingleConnection.class.getName()).log(Level.SEVERE, null, e);
-        }
-        try {
-            conn = DriverManager.getConnection(url, username, passwd);
-        } catch (SQLException e) {
-            Logger.getLogger(SingleConnection.class.getName()).log(Level.SEVERE, null, e);
+	}
 
-        }
-    }
+	public static Connection getConnection() {
+		return conn;
+	}
 
-    public static Connection getConnection() {
-        return conn;
-    }
 }
