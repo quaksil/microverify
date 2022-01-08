@@ -6,6 +6,7 @@ import model.Faculty;
 import model.Photo;
 import model.Major;
 import model.Students;
+
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -22,190 +23,181 @@ import java.util.Base64;
 
 public class SearchQuery {
 
-	private ResultSet results;
-	ArrayList<Students> students = new ArrayList<Students>();
-	
-	Connection connect = SingleConnection.getConnection();
+    ArrayList<Students> students = new ArrayList<Students>();
+    Connection connect = SingleConnection.getConnection();
+    private ResultSet results;
 
-	public Photo getPhoto(int studentid) throws SQLException, IOException {
+    public Photo getPhoto(int studentid) throws SQLException, IOException {
 
-		Photo photo = null;
+        Photo photo = null;
 
-		String queryImage = "SELECT * FROM photos WHERE studentid = ?";
+        String queryImage = "SELECT * FROM photos WHERE studentid = ?";
 
-		PreparedStatement ps = connect.prepareStatement(queryImage);
+        PreparedStatement ps = connect.prepareStatement(queryImage);
 
-		ps.setInt(1, studentid);
-		this.results = ps.executeQuery();
+        ps.setInt(1, studentid);
+        this.results = ps.executeQuery();
 
-		while (this.results.next()) {
+        while (this.results.next()) {
 
-			photo = new Photo();
+            photo = new Photo();
 
-			byte[] imgBytes = this.results.getBytes("img");
+            byte[] imgBytes = this.results.getBytes("img");
 
-			String base64Image = Base64.getEncoder().encodeToString(imgBytes);
-			photo.setBase64Image(base64Image);
+            String base64Image = Base64.getEncoder().encodeToString(imgBytes);
+            photo.setBase64Image(base64Image);
 
-			photo.setId(this.results.getInt("id"));
-			photo.setName(this.results.getString("imgname"));
-			photo.setStudentId(this.results.getInt("studentid"));
+            photo.setId(this.results.getInt("id"));
+            photo.setName(this.results.getString("imgname"));
+            photo.setStudentId(this.results.getInt("studentid"));
 
-		}
-		return photo;
+        }
+        return photo;
 
-	}
+    }
 
-	public ArrayList<Students> doSearch(String queryS) throws SQLException, IOException {
+    public ArrayList<Students> doSearch(String queryS) throws SQLException, IOException {
 
-		String firstname = "";
-		String lastname = "";
+        String firstname = "";
+        String lastname = "";
 
-		String query = null;
+        String query = null;
 
-		PreparedStatement ps = null;
+        PreparedStatement ps = null;
 
-		if (NumericHelper.isNumeric(queryS)) {
+        if (NumericHelper.isNumeric(queryS)) {
 
-			int id = Integer.parseInt(queryS);
-			query = "SELECT * FROM student WHERE id=" + id;
+            int id = Integer.parseInt(queryS);
+            query = "SELECT * FROM student WHERE id=" + id;
 
-			try {
+            try {
 
-				ps = connect.prepareStatement(query);
-				this.results = ps.executeQuery();
+                ps = connect.prepareStatement(query);
+                this.results = ps.executeQuery();
 
-			} catch (SQLException e) {
-				Logger.getLogger(ReadQuery.class.getName()).log(Level.SEVERE, null, e);
-			}
+            } catch (SQLException e) {
+                Logger.getLogger(ReadQuery.class.getName()).log(Level.SEVERE, null, e);
+            }
 
-		}
+        } else {
 
-		else {
+            String[] fullname = queryS.split(" ");
 
-			String[] fullname = queryS.split(" ");
+            if (fullname.length > 1) {
 
-			if (fullname.length > 1) {
+                firstname = fullname[0];
+                lastname = fullname[1];
 
-				firstname = fullname[0];
-				lastname = fullname[1];
+                query = "SELECT * FROM student WHERE UPPER (firstname) LIKE ? AND UPPER (lastname) LIKE ? " +
+                        "OR UPPER (lastname) LIKE ? AND UPPER (firstname) LIKE ? " +
+                        "ORDER BY id ASC";
 
-				query = "SELECT * FROM student WHERE (UPPER (firstname) LIKE ? AND UPPER (lastname) LIKE ?"
-						+ " OR (UPPER (firstname) LIKE ? AND UPPER (lastname) LIKE ?))"
-						+ " OR ((UPPER (firstname) LIKE ? OR UPPER (lastname) LIKE ?)"
-						+ " OR (UPPER (firstname) LIKE ? OR UPPER (lastname) LIKE ?))"
-						+ " ORDER BY id ASC";
 
-				try {
+                try {
+                    ps = connect.prepareStatement(query);
+                    ps.setString(1, "%" + firstname.toUpperCase() + "%");
+                    ps.setString(2, "%" + lastname.toUpperCase() + "%");
+                    ps.setString(3, "%" + firstname.toUpperCase() + "%");
+                    ps.setString(4, "%" + lastname.toUpperCase() + "%");
+                   /* ps.setString(5, "%" + lastname.toUpperCase() + "%");
+                    ps.setString(6, "%" + firstname.toUpperCase() + "%");
+                    ps.setString(7, "%" + lastname.toUpperCase() + "%");
+                    ps.setString(8, "%" + firstname.toUpperCase() + "%"); */
 
-					ps = connect.prepareStatement(query);
-					ps.setString(1, "%" + firstname.toUpperCase() + "%");
-					ps.setString(2, "%" + lastname.toUpperCase() + "%");
-					ps.setString(3, "%" + lastname.toUpperCase() + "%");
-					ps.setString(4, "%" + firstname.toUpperCase() + "%");
-					ps.setString(5, "%" + firstname.toUpperCase() + "%");
-					ps.setString(6, "%" + lastname.toUpperCase() + "%");
-					ps.setString(7, "%" + lastname.toUpperCase() + "%");
-					ps.setString(8, "%" + firstname.toUpperCase() + "%");
+                    this.results = ps.executeQuery();
 
-					this.results = ps.executeQuery();
+                } catch (SQLException e) {
+                    Logger.getLogger(ReadQuery.class.getName()).log(Level.SEVERE, null, e);
+                }
+            } else {
 
-				} catch (SQLException e) {
-					Logger.getLogger(ReadQuery.class.getName()).log(Level.SEVERE, null, e);
-				}
-			}
+                query = "SELECT * FROM student WHERE UPPER (firstname) LIKE ? OR UPPER (lastname) LIKE ? ORDER BY id ASC";
 
-			else {
+                try {
 
-				query = "SELECT * FROM student WHERE UPPER (firstname) LIKE ? OR UPPER (lastname) LIKE ? ORDER BY id ASC";
+                    ps = connect.prepareStatement(query);
+                    ps.setString(1, "%" + queryS.toUpperCase() + "%");
+                    ps.setString(2, "%" + queryS.toUpperCase() + "%");
 
-				try {
+                    this.results = ps.executeQuery();
 
-					ps = connect.prepareStatement(query);
-					ps.setString(1, "%" + queryS.toUpperCase() + "%");
-					ps.setString(2, "%" + queryS.toUpperCase() + "%");
+                } catch (SQLException e) {
+                    Logger.getLogger(ReadQuery.class.getName()).log(Level.SEVERE, null, e);
+                }
 
-					this.results = ps.executeQuery();
+            }
+        }
 
-				} catch (SQLException e) {
-					Logger.getLogger(ReadQuery.class.getName()).log(Level.SEVERE, null, e);
-				}
+        try {
+            while (this.results.next()) {
 
-			}
-		}
+                Students student = new Students();
+                Faculty faculty = new Faculty();
+                Department department = new Department();
+                Major major = new Major();
 
-		try {
-			while (this.results.next()) {
+                student.setId(this.results.getInt("id"));
+                student.setFirstname(this.results.getString("firstname"));
+                student.setLastname(this.results.getString("lastname"));
+                student.setGender(Students.gender.valueOf(this.results.getString("gender")));
+                student.setBday(this.results.getDate("bday"));
 
-				Students student = new Students();
-				Faculty faculty = new Faculty();
-				Department department = new Department();
-				Major major = new Major();
+                student.setFirstfather(this.results.getString("firstfather"));
+                student.setFirstmaiden(this.results.getString("firstmaiden"));
+                student.setLastmaiden(this.results.getString("lastmaiden"));
 
-				student.setId(this.results.getInt("id"));
-				student.setFirstname(this.results.getString("firstname"));
-				student.setLastname(this.results.getString("lastname"));
-				student.setGender(Students.gender.valueOf(this.results.getString("gender")));
-				student.setBday(this.results.getDate("bday"));
+                faculty.setName(this.results.getString("faculty"));
+                faculty.setUniversity("Constantine 2 University");
+                student.setFaculty(faculty);
 
-				student.setFirstfather(this.results.getString("firstfather"));
-				student.setFirstmaiden(this.results.getString("firstmaiden"));
-				student.setLastmaiden(this.results.getString("lastmaiden"));
+                department.setName(this.results.getString("department"));
+                department.setFaculty(faculty.getName());
+                student.setDepartment(department);
 
-				faculty.setName(this.results.getString("faculty"));
-				faculty.setUniversity("Constantine 2 University");
-				student.setFaculty(faculty);
+                student.setCourse(this.results.getString("course"));
+                student.setLevel(this.results.getString("level"));
 
-				department.setName(this.results.getString("department"));
-				department.setFaculty(faculty.getName());
-				student.setDepartment(department);
+                major.setName(this.results.getString("major"));
+                major.setDepartment(department.getName());
+                student.setMajor(major);
 
-				student.setCourse(this.results.getString("course"));
-				student.setLevel(this.results.getString("level"));
+                student.setLastyear(this.results.getInt("lastyear"));
 
-				major.setName(this.results.getString("major"));
-				major.setDepartment(department.getName());
-				student.setMajor(major);
+                students.add(student);
 
-				student.setLastyear(this.results.getInt("lastyear"));
+            }
+            /*
+             * queryCurrentYear =
+             * "SELECT year FROM university WHERE name = 'Constantine 2 University - Abdelhamid Mehri'"
+             * ;
+             *
+             * this.results = ps.executeQuery(queryCurrentYear); if (this.results.next()) {
+             *
+             * int year = this.results.getInt("year");
+             *
+             * }
+             */
 
-				students.add(student);
+        } catch (SQLException e) {
+            Logger.getLogger(ReadQuery.class.getName()).log(Level.SEVERE, null, e);
+        } finally {
 
-			}
-			/*
-			 * queryCurrentYear =
-			 * "SELECT year FROM university WHERE name = 'Constantine 2 University - Abdelhamid Mehri'"
-			 * ;
-			 * 
-			 * this.results = ps.executeQuery(queryCurrentYear); if (this.results.next()) {
-			 * 
-			 * int year = this.results.getInt("year");
-			 * 
-			 * }
-			 */
+            try {
+                results.close();
+            } catch (SQLException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            try {
+                ps.close();
+            } catch (SQLException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
 
-		}
+        }
 
-		catch (SQLException e) {
-			Logger.getLogger(ReadQuery.class.getName()).log(Level.SEVERE, null, e);
-		} finally {
+        return students;
 
-			try {
-				results.close();
-			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			try {
-				ps.close();
-			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-
-		}
-
-		return students;
-
-	}
+    }
 }
