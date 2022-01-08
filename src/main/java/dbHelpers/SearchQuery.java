@@ -19,6 +19,7 @@ import connection.SingleConnection;
 
 import java.util.Base64;
 
+
 public class SearchQuery {
 
 	private ResultSet results;
@@ -89,10 +90,10 @@ public class SearchQuery {
 				firstname = fullname[0];
 				lastname = fullname[1];
 
-				query = "SELECT * FROM student WHERE UPPER (firstname) LIKE ? AND UPPER (lastname) LIKE ?"
-						+ " OR (UPPER (firstname) LIKE ? AND UPPER (lastname) LIKE ?)"
-						+ " OR (UPPER (firstname) LIKE ? OR UPPER (lastname) LIKE ?)"
-						+ " OR (UPPER (firstname) LIKE ? OR UPPER (lastname) LIKE ?)"
+				query = "SELECT * FROM student WHERE (UPPER (firstname) LIKE ? AND UPPER (lastname) LIKE ?"
+						+ " OR (UPPER (firstname) LIKE ? AND UPPER (lastname) LIKE ?))"
+						+ " OR ((UPPER (firstname) LIKE ? OR UPPER (lastname) LIKE ?)"
+						+ " OR (UPPER (firstname) LIKE ? OR UPPER (lastname) LIKE ?))"
 						+ " ORDER BY id ASC";
 
 				try {
