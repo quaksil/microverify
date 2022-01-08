@@ -104,13 +104,15 @@ public class SearchQuery {
 				firstname = fullname[0];
 				lastname = fullname[1];
 
-				query = "SELECT * FROM student WHERE UPPER (firstname) LIKE ? OR UPPER (lastname) LIKE ? ORDER BY id ASC";
+				query = "SELECT * FROM student WHERE UPPER (firstname) LIKE ? AND UPPER (lastname) LIKE ? OR (UPPER (firstname) LIKE ? AND UPPER (lastname) LIKE ?) ORDER BY id ASC";
 
 				try {
 
 					ps = getConnection().prepareStatement(query);
 					ps.setString(1, "%" + firstname.toUpperCase() + "%");
 					ps.setString(2, "%" + lastname.toUpperCase() + "%");
+					ps.setString(3, "%" + lastname.toUpperCase() + "%");
+					ps.setString(4, "%" + firstname.toUpperCase() + "%");
 
 					this.results = ps.executeQuery();
 
